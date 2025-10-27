@@ -1,24 +1,58 @@
-# Logs
-logs
-*.log
+# ------------------------------
+# 🌱 Node & Dependency 관련
+# ------------------------------
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
+package-lock.json
+.pnpm-store/
+.cache/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-node_modules
-dist
-dist-ssr
-*.local
+# ------------------------------
+# ⚙️ Vite / Build 결과물
+# ------------------------------
+dist/
+build/
+*.tsbuildinfo
+vite.config.ts.timestamp*
+.vite/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# ------------------------------
+# 🧩 IDE & OS 관련
+# ------------------------------
+.vscode/
+.idea/
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+*.swp
+
+# ------------------------------
+# 🧪 Test / Coverage
+# ------------------------------
+coverage/
+*.lcov
+jest-html-reporters-*
+
+# ------------------------------
+# 🔧 기타 임시 파일
+# ------------------------------
+*.log
+*.tmp
+*.bak
+*.local
+*.lock
+*.orig
+*.rej
+
+# ------------------------------
+# 🧠 환경설정 제외할 수 있는 것들
+# ------------------------------
+eslintcache
+*.iml
