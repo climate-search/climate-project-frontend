@@ -112,22 +112,24 @@ export const ProjectProvider = ({ children }) => {
   const searchProjects = useCallback(
     async (filters) => {
       console.log('[ProjectContext] searchProjects called with:', filters)
-      // Build API filters - only send one at a time for OR logic
-      const apiFilters = {}
 
-      // Priority: if search term exists, use it; otherwise use category
-      if (filters.search && filters.search.trim()) {
-        console.log('[ProjectContext] Using search term:', filters.search)
-        apiFilters.search = filters.search
-      } else if (filters.category && filters.category.trim()) {
-        console.log('[ProjectContext] Using category:', filters.category)
-        apiFilters.category = filters.category
+      // Build API filters - only send one at a time for OR logic
+      const apiFilters = {
+        page: 0, // Always reset to first page when filtering
       }
 
-      // Always reset to first page when filtering
-      apiFilters.page = 0
+      // Priority: if search term exists, use it; otherwise use category
+      if (filters && filters.search && filters.search.trim().length > 0) {
+        console.log('[ProjectContext] Using search term:', filters.search)
+        apiFilters.search = filters.search
+        // Don't send category if we have search term
+      } else if (filters && filters.category && filters.category.trim().length > 0) {
+        console.log('[ProjectContext] Using category:', filters.category)
+        apiFilters.category = filters.category
+        // Don't send search if we only have category
+      }
 
-      console.log('[ProjectContext] Final API filters:', apiFilters)
+      console.log('[ProjectContext] Final API filters to send:', apiFilters)
       await performFetch(apiFilters)
     },
     [performFetch]
