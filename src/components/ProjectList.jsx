@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useProjects } from '../hooks/useProjects'
 import { ProjectCard } from './ProjectCard'
 import './ProjectList.css'
@@ -18,6 +18,7 @@ export const ProjectList = () => {
     search: '',
     category: '',
   })
+  const isInitialMount = useRef(true)
 
   const categories = getCategories()
 
@@ -38,8 +39,14 @@ export const ProjectList = () => {
     await searchProjects({})
   }
 
-  // Apply filters when search or category changes
+  // Apply filters when search or category changes (but not on initial mount)
   useEffect(() => {
+    // Skip the first render to avoid searching with empty filters
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+
     const apiFilters = {}
     if (filters.search) {
       apiFilters.search = filters.search
@@ -50,7 +57,8 @@ export const ProjectList = () => {
 
     console.log('[ProjectList] Applying filters:', apiFilters)
     searchProjects(apiFilters)
-  }, [filters.search, filters.category, searchProjects])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, filters.category])
 
   // No local filtering - all done by API
   const filteredProjects = projects
