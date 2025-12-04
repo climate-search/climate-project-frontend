@@ -121,17 +121,68 @@ export const ProjectProvider = ({ children }) => {
   const searchProjects = useCallback(
     async (filters) => {
       console.log('[ProjectContext] searchProjects called with:', filters)
-      // Search across ALL projects, not just one page
-      // Use large size to get all matching results
-      const searchFilters = {
-        ...filters,
+      // Get ALL projects from API (no filters sent to API)
+      // Then filter locally on the frontend
+      const apiFilters = {
         page: 0,
-        size: 1000, // Get all projects that match the search/filter
+        size: 1000, // Get all projects
       }
-      console.log('[ProjectContext] Passing to performFetch with size=1000:', searchFilters)
-      await performFetch(searchFilters)
+      console.log('[ProjectContext] Fetching all projects, then filtering locally with:', filters)
+
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Fetch all projects without any filters
+        const response = await apiService.getProjects(apiFilters)
+
+        if (response.content) {
+          let filteredProjects = response.content
+
+          // Apply local filtering
+          if (filters.search && filters.search.trim().length > 0) {
+            const searchTerm = filters.search.toLowerCase()
+            console.log('[ProjectContext] Filtering by search term:', searchTerm)
+            filteredProjects = filteredProjects.filter((project) => {
+              return (
+                project.projectName.toLowerCase().includes(searchTerm) ||
+                project.projectSummary.toLowerCase().includes(searchTerm)
+              )
+            })
+          } else if (filters.category && filters.category.trim().length > 0) {
+            const categoryTerm = filters.category.trim()
+            console.log('[ProjectContext] Filtering by category:', categoryTerm)
+            filteredProjects = filteredProjects.filter((project) => {
+              // Split comma-separated tags and check if any match
+              const tags = project.tags.split(',').map((tag) => tag.trim())
+              return tags.includes(categoryTerm)
+            })
+          }
+
+          // Transform and set projects
+          const transformedProjects = filteredProjects.map((project) => ({
+            id: project.id,
+            projectName: project.projectName,
+            projectSummary: project.projectSummary,
+            source: project.source,
+            url: project.url,
+            tags: project.tags,
+          }))
+
+          console.log('[ProjectContext] Filtered results count:', transformedProjects.length)
+          setProjects(transformedProjects)
+          setCurrentPage(0)
+          setTotalPages(1) // Since we're showing all filtered results on one page
+          setTotalElements(transformedProjects.length)
+        }
+      } catch (err) {
+        console.error('[ProjectContext] Error searching:', err)
+        setError(err.message || 'Failed to search projects')
+      } finally {
+        setLoading(false)
+      }
     },
-    [performFetch]
+    []
   )
 
   // Exported function for pagination
