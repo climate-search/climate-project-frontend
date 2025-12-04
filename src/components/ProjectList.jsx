@@ -30,7 +30,9 @@ export const ProjectList = () => {
     setFilters(newFilters)
 
     // Immediately apply filters when user changes them
-    console.log('[ProjectList] Filter changed:', newFilters)
+    console.log('[ProjectList] Filter changed - name:', name, 'value:', value)
+    console.log('[ProjectList] Calling searchProjects with:', newFilters)
+    // Call search immediately with the new filters
     searchProjects(newFilters)
   }
 
