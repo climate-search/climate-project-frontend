@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useProjects } from '../hooks/useProjects'
 import { ProjectCard } from './ProjectCard'
 import './ProjectList.css'
@@ -18,16 +18,20 @@ export const ProjectList = () => {
     search: '',
     category: '',
   })
-  const isInitialMount = useRef(true)
 
   const categories = getCategories()
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target
-    setFilters((prev) => ({
-      ...prev,
+    const newFilters = {
+      ...filters,
       [name]: value,
-    }))
+    }
+    setFilters(newFilters)
+
+    // Immediately apply filters when user changes them
+    console.log('[ProjectList] Filter changed:', newFilters)
+    searchProjects(newFilters)
   }
 
   const handleReset = async () => {
@@ -38,27 +42,6 @@ export const ProjectList = () => {
     // Fetch all projects again (no filters)
     await searchProjects({})
   }
-
-  // Apply filters when search or category changes (but not on initial mount)
-  useEffect(() => {
-    // Skip the first render to avoid searching with empty filters
-    if (isInitialMount.current) {
-      isInitialMount.current = false
-      return
-    }
-
-    const apiFilters = {}
-    if (filters.search) {
-      apiFilters.search = filters.search
-    }
-    if (filters.category) {
-      apiFilters.category = filters.category
-    }
-
-    console.log('[ProjectList] Applying filters:', apiFilters)
-    searchProjects(apiFilters)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.category])
 
   // No local filtering - all done by API
   const filteredProjects = projects
