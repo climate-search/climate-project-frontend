@@ -23,7 +23,7 @@ export const ProjectProvider = ({ children }) => {
         // Build API filters - ensure only ONE of search/category is sent (not both)
         const apiFilters = {
           page: filters.page !== undefined ? filters.page : 0,
-          size: pageSize,
+          size: filters.size !== undefined ? filters.size : pageSize,
         }
 
         // Only add ONE filter: prioritize search over category
@@ -121,12 +121,14 @@ export const ProjectProvider = ({ children }) => {
   const searchProjects = useCallback(
     async (filters) => {
       console.log('[ProjectContext] searchProjects called with:', filters)
-      // Reset to first page when filtering
+      // Search across ALL projects, not just one page
+      // Use large size to get all matching results
       const searchFilters = {
         ...filters,
         page: 0,
+        size: 1000, // Get all projects that match the search/filter
       }
-      console.log('[ProjectContext] Passing to performFetch:', searchFilters)
+      console.log('[ProjectContext] Passing to performFetch with size=1000:', searchFilters)
       await performFetch(searchFilters)
     },
     [performFetch]
