@@ -11,6 +11,7 @@ export const ProjectProvider = ({ children }) => {
   const [totalElements, setTotalElements] = useState(0)
   const [pageSize] = useState(10)
   const [allCategories, setAllCategories] = useState([])
+  const [allFilteredProjects, setAllFilteredProjects] = useState([])
 
   // Internal function to fetch from API without triggering infinite loops
   const performFetch = useCallback(
@@ -169,7 +170,7 @@ export const ProjectProvider = ({ children }) => {
             console.log('[ProjectContext] Applied filters - results:', filteredProjects.length)
           }
 
-          // Transform and set projects
+          // Transform all filtered projects
           const transformedProjects = filteredProjects.map((project) => ({
             id: project.id,
             projectName: project.projectName,
@@ -180,10 +181,27 @@ export const ProjectProvider = ({ children }) => {
           }))
 
           console.log('[ProjectContext] Filtered results count:', transformedProjects.length)
-          setProjects(transformedProjects)
-          setCurrentPage(0)
-          setTotalPages(1) // Since we're showing all filtered results on one page
-          setTotalElements(transformedProjects.length)
+
+          // Calculate pagination
+          const totalCount = transformedProjects.length
+          const itemsPerPage = pageSize
+          const totalPagesCount = Math.ceil(totalCount / itemsPerPage)
+          const currentPageNum = 0 // Start from page 0
+
+          // Get only the first page of results (page 0, items 0-9)
+          const pagedProjects = transformedProjects.slice(
+            currentPageNum * itemsPerPage,
+            (currentPageNum + 1) * itemsPerPage
+          )
+
+          console.log(
+            `[ProjectContext] Showing page ${currentPageNum} with ${pagedProjects.length} items out of ${totalCount} total`
+          )
+          setAllFilteredProjects(transformedProjects) // Store all results for pagination
+          setProjects(pagedProjects)
+          setCurrentPage(currentPageNum)
+          setTotalPages(totalPagesCount)
+          setTotalElements(totalCount)
         }
       } catch (err) {
         console.error('[ProjectContext] Error searching:', err)
@@ -197,20 +215,33 @@ export const ProjectProvider = ({ children }) => {
 
   // Exported function for pagination
   const goToPage = useCallback(
-    async (page, currentFilters = {}) => {
-      console.log('[ProjectContext] goToPage called with page:', page, 'filters:', currentFilters)
+    async (page) => {
+      console.log('[ProjectContext] goToPage called with page:', page)
+
+      // If we have filtered results (from search), paginate through them
+      if (allFilteredProjects.length > 0) {
+        console.log('[ProjectContext] Paginating through filtered results')
+        const itemsPerPage = pageSize
+        const startIdx = page * itemsPerPage
+        const endIdx = (page + 1) * itemsPerPage
+        const pagedProjects = allFilteredProjects.slice(startIdx, endIdx)
+
+        console.log(
+          `[ProjectContext] Showing page ${page} with ${pagedProjects.length} items`
+        )
+        setProjects(pagedProjects)
+        setCurrentPage(page)
+        return
+      }
+
+      // Otherwise, fetch from API (for initial page load)
+      console.log('[ProjectContext] Fetching from API for page:', page)
       const apiFilters = {
         page,
       }
-      // Priority: if search term exists, use it; otherwise use category (same logic as searchProjects)
-      if (currentFilters.search && currentFilters.search.trim()) {
-        apiFilters.search = currentFilters.search
-      } else if (currentFilters.category && currentFilters.category.trim()) {
-        apiFilters.category = currentFilters.category
-      }
       await performFetch(apiFilters)
     },
-    [performFetch]
+    [allFilteredProjects, pageSize, performFetch]
   )
 
   const addProject = async (newProject) => {
