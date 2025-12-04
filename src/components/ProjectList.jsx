@@ -10,6 +10,7 @@ export const ProjectList = () => {
     error,
     currentPage,
     totalPages,
+    totalElements,
     getCategories,
     searchProjects,
     goToPage,
@@ -123,7 +124,7 @@ export const ProjectList = () => {
 
       <div className="results-section">
         <h3>
-          검색 결과 ({filteredProjects.length}개)
+          검색 결과 ({totalElements}개)
         </h3>
         {error && (
           <div className="error-message">
