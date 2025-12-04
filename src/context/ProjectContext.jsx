@@ -112,8 +112,23 @@ export const ProjectProvider = ({ children }) => {
   const searchProjects = useCallback(
     async (filters) => {
       console.log('[ProjectContext] searchProjects called with:', filters)
-      // Just delegate to performFetch
-      await performFetch(filters)
+      // Build API filters - only send one at a time for OR logic
+      const apiFilters = {}
+
+      // Priority: if search term exists, use it; otherwise use category
+      if (filters.search && filters.search.trim()) {
+        console.log('[ProjectContext] Using search term:', filters.search)
+        apiFilters.search = filters.search
+      } else if (filters.category && filters.category.trim()) {
+        console.log('[ProjectContext] Using category:', filters.category)
+        apiFilters.category = filters.category
+      }
+
+      // Always reset to first page when filtering
+      apiFilters.page = 0
+
+      console.log('[ProjectContext] Final API filters:', apiFilters)
+      await performFetch(apiFilters)
     },
     [performFetch]
   )
@@ -125,10 +140,10 @@ export const ProjectProvider = ({ children }) => {
       const apiFilters = {
         page,
       }
-      if (currentFilters.search) {
+      // Priority: if search term exists, use it; otherwise use category (same logic as searchProjects)
+      if (currentFilters.search && currentFilters.search.trim()) {
         apiFilters.search = currentFilters.search
-      }
-      if (currentFilters.category) {
+      } else if (currentFilters.category && currentFilters.category.trim()) {
         apiFilters.category = currentFilters.category
       }
       await performFetch(apiFilters)
