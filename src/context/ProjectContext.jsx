@@ -139,24 +139,34 @@ export const ProjectProvider = ({ children }) => {
         if (response.content) {
           let filteredProjects = response.content
 
-          // Apply local filtering
-          if (filters.search && filters.search.trim().length > 0) {
-            const searchTerm = filters.search.toLowerCase()
-            console.log('[ProjectContext] Filtering by search term:', searchTerm)
+          // Apply search filter if provided
+          const hasSearch = filters.search && filters.search.trim().length > 0
+          const hasCategory = filters.category && filters.category.trim().length > 0
+
+          if (hasSearch || hasCategory) {
+            console.log('[ProjectContext] Applying filters - search:', hasSearch, 'category:', hasCategory)
             filteredProjects = filteredProjects.filter((project) => {
-              return (
-                project.projectName.toLowerCase().includes(searchTerm) ||
-                project.projectSummary.toLowerCase().includes(searchTerm)
-              )
+              // Check search filter
+              let matchesSearch = true
+              if (hasSearch) {
+                const searchTerm = filters.search.toLowerCase()
+                matchesSearch =
+                  project.projectName.toLowerCase().includes(searchTerm) ||
+                  project.projectSummary.toLowerCase().includes(searchTerm)
+              }
+
+              // Check category filter
+              let matchesCategory = true
+              if (hasCategory) {
+                const categoryTerm = filters.category.trim()
+                const tags = project.tags.split(',').map((tag) => tag.trim())
+                matchesCategory = tags.includes(categoryTerm)
+              }
+
+              // Return true only if BOTH conditions are met (AND logic)
+              return matchesSearch && matchesCategory
             })
-          } else if (filters.category && filters.category.trim().length > 0) {
-            const categoryTerm = filters.category.trim()
-            console.log('[ProjectContext] Filtering by category:', categoryTerm)
-            filteredProjects = filteredProjects.filter((project) => {
-              // Split comma-separated tags and check if any match
-              const tags = project.tags.split(',').map((tag) => tag.trim())
-              return tags.includes(categoryTerm)
-            })
+            console.log('[ProjectContext] Applied filters - results:', filteredProjects.length)
           }
 
           // Transform and set projects
